@@ -246,6 +246,11 @@ void IEC62056Component::parse_id_(const char *packet) {
   baud_rate_identification_ = len >= 5 ? packet[4] : 0 /*set proto A, baud rate=0*/;
   ESP_LOGVV(TAG, "Baudrate char: '%c'", baud_rate_identification_);
   set_protocol_(baud_rate_identification_);
+  if (len >= 7 && packet[5] == '\\' && packet[6] == '2') // /XXXZ\2Ident
+  {                                    
+      ESP_LOGD(TAG, "The meter is indicating mode E, which is unsupported. Attempting mode C. " 
+                    "This will work for meters supporting both mode E and C.");
+  }
 }
 
 void IEC62056Component::update_baudrate_(uint32_t baudrate) {
