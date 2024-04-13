@@ -32,7 +32,9 @@ def validate_obis(value):
     # F.35
     # 0.2.2
     # 0-0:1.0.0*102
-    rx = r"(\d+-\d+\:){,1}[\dA-F]+\.[\dA-F]+(.\d+){,1}(\*\d+){,1}"
+    # C.P.5
+    # Allow any uppercase alphanumeric character in the OBIS code
+    rx = r"(\d+-\d+\:){,1}[\dA-Z]+\.[\dA-Z]+(.[\dA-Z]+){,1}(\*\d+){,1}"
 
     m = re.fullmatch(rx, value)
     if m is None:
