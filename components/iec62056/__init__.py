@@ -19,6 +19,7 @@ CONF_RETRY_COUNTER_MAX = "retry_counter_max"
 CONF_RETRY_DELAY = "retry_delay"
 CONF_MODE_D = "mode_d"  # protocol mode D
 CONF_BAUD_RATE_MAX = "baud_rate_max"
+CONF_CONVERT_COMMA = "convert_comma"
 
 iec62056_ns = cg.esphome_ns.namespace("iec62056")
 IEC62056Component = iec62056_ns.class_(
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_UPDATE_INTERVAL, default="15min"): cv.update_interval,
             cv.Optional(CONF_BAUD_RATE_MAX, default=9600): validate_baud_rate,
             cv.Optional(CONF_BATTERY_METER, default=False): cv.boolean,
+            cv.Optional(CONF_CONVERT_COMMA, default=False): cv.boolean,
             cv.Optional(
                 CONF_RECEIVE_TIMEOUT, default="3s"
             ): cv.positive_time_period_milliseconds,
@@ -90,6 +92,9 @@ async def to_code(config):
 
     if CONF_BATTERY_METER in config:
         cg.add(var.set_battery_meter(config[CONF_BATTERY_METER]))
+
+    if CONF_CONVERT_COMMA in config:
+        cg.add(var.set_convert_comma(config[CONF_CONVERT_COMMA]))
 
     if CONF_RETRY_COUNTER_MAX in config:
         cg.add(var.set_max_retry_counter(config[CONF_RETRY_COUNTER_MAX]))

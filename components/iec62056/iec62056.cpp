@@ -56,6 +56,7 @@ void IEC62056Component::dump_config() {
   if (!force_mode_d_) {
     // These settings are not used in Mode D
     ESP_LOGCONFIG(TAG, "  Battery meter: %s", YESNO(this->battery_meter_));
+    ESP_LOGCONFIG(TAG, "  Convert Comma: %s", YESNO(this->convert_comma_));
     if (this->config_baud_rate_max_bps_ > 0) {
       ESP_LOGCONFIG(TAG, "  Max baud rate: %u bps", this->config_baud_rate_max_bps_);
     } else {
@@ -617,6 +618,22 @@ bool IEC62056Component::set_sensor_value_(SENSOR_MAP::iterator &i, const char *v
     ESP_LOGD(TAG, "Set text sensor '%s' for OBIS '%s' group %d. Value: '%s'", txt->get_name().c_str(),
              txt->get_obis().c_str(), txt->get_group(), value);
   } else {  // SENSOR
+    // some meters send ',' instead of '.' -> convert them
+    char valueBuf[40];
+    if (convert_comma_) {
+      const char *valuePtr = value;
+      char *valueBufPtr = valueBuf;
+      while(*valuePtr) {
+        if(*valuePtr == ','){
+          *valueBufPtr++ = '.';
+        } else {
+          *valueBufPtr++ = *valuePtr;
+        }
+        valuePtr++;
+      }
+      value = valueBuf;
+    }
+
     // convert to float
     if (validate_float_(value)) {
       IEC62056Sensor *sen = static_cast<IEC62056Sensor *>(sensor);
