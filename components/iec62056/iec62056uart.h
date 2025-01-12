@@ -170,7 +170,7 @@ class IEC62056UART final : public uart::IDFUARTComponent {
       this->has_peek_ = false;
     }
     if (length_to_read > 0)
-      uart_read_bytes(this->iuart_num_, data, length_to_read, 20 / portTICK_RATE_MS);
+      uart_read_bytes(this->iuart_num_, data, length_to_read, 20 / portTICK_PERIOD_MS);
     xSemaphoreGive(this->ilock_);
 
     return true;
