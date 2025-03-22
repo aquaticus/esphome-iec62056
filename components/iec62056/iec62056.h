@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/automation.h"
 #include "esphome/components/uart/uart.h"
 #ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
@@ -65,6 +66,13 @@ class IEC62056Component : public Component, public uart::UARTDevice {
   /// @brief Called when switch state changed. Begins readout.
   void trigger_readout();
   void set_mode_d(bool flag) { force_mode_d_ = flag; }
+
+  void add_on_timeout_callback(std::function<void()> callback) {
+    this->on_timeout_callback_.add(std::move(callback));
+  }
+  void add_on_wait_next_readout_callback(std::function<void()> callback) {
+    this->on_wait_next_readout_callback_.add(std::move(callback));
+  }
 
  protected:
   bool parse_line_(const char *line, std::string &out_obis, std::string &out_value1, std::string &out_value2);
@@ -214,6 +222,24 @@ class IEC62056Component : public Component, public uart::UARTDevice {
   std::unique_ptr<IEC62056UART> iuart_;
   /// @brief Indicates unidirectional communication, mode D
   bool force_mode_d_;
+  /// @brief on_timeout callback
+  CallbackManager<void()> on_timeout_callback_;
+  /// @brief on_wait_next_readout callback
+  CallbackManager<void()> on_wait_next_readout_callback_;
+};
+
+class Iec62056OTimeoutTrigger : public Trigger<> {
+public:
+  explicit Iec62056OTimeoutTrigger(IEC62056Component* parent) {
+    parent->add_on_timeout_callback([this]() { this->trigger(); });
+  }
+};
+
+class Iec62056OWaitNextReadoutTrigger : public Trigger<> {
+  public:
+    explicit Iec62056OWaitNextReadoutTrigger(IEC62056Component* parent) {
+      parent->add_on_wait_next_readout_callback([this]() { this->trigger(); });
+    }
 };
 
 }  // namespace iec62056

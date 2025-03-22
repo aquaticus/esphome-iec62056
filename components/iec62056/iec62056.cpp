@@ -801,6 +801,7 @@ void IEC62056Component::retry_or_sleep_() {
     set_next_state_(MODE_D_WAIT);
   } else if (retry_counter_ >= max_retries_) {
     ESP_LOGD(TAG, "Exceeded retry counter.");
+    this->on_timeout_callback_.call();
     wait_next_readout_();
   } else {
     retry_counter_inc_();
@@ -825,6 +826,8 @@ void IEC62056Component::trigger_readout() {
 }
 
 void IEC62056Component::wait_next_readout_() {
+  this->on_wait_next_readout_callback_.call();
+
   if (force_mode_d_) {
     set_next_state_(MODE_D_WAIT);
     return;
