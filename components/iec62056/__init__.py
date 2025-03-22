@@ -6,7 +6,9 @@ from esphome.const import (
     CONF_ID,
     CONF_RECEIVE_TIMEOUT,
     CONF_UPDATE_INTERVAL,
+    CONF_TRIGGER_ID
 )
+from esphome import automation
 
 CODEOWNERS = ["@aquaticus"]
 
@@ -19,12 +21,20 @@ CONF_RETRY_COUNTER_MAX = "retry_counter_max"
 CONF_RETRY_DELAY = "retry_delay"
 CONF_MODE_D = "mode_d"  # protocol mode D
 CONF_BAUD_RATE_MAX = "baud_rate_max"
+CONF_ON_TIMEOUT = "on_timeout"
+CONF_ON_WAIT_NEXT_READOUT = "on_wait_next_readout"
 
 iec62056_ns = cg.esphome_ns.namespace("iec62056")
 IEC62056Component = iec62056_ns.class_(
     "IEC62056Component", cg.Component, uart.UARTDevice
 )
 
+Iec62056OTimeoutTrigger = iec62056_ns.class_(
+    "Iec62056OTimeoutTrigger", automation.Trigger
+)
+Iec62056OWaitNextReadoutTrigger = iec62056_ns.class_(
+    "Iec62056OWaitNextReadoutTrigger", automation.Trigger
+)
 
 def validate_obis(value):
     # match, e.g.
@@ -67,6 +77,20 @@ CONFIG_SCHEMA = cv.All(
                 CONF_RETRY_DELAY, default="15s"
             ): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_MODE_D, default=False): cv.boolean,
+            cv.Optional(CONF_ON_TIMEOUT): automation.validate_automation(
+                {
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                        Iec62056OTimeoutTrigger
+                    ),
+                }
+            ),
+            cv.Optional(CONF_ON_WAIT_NEXT_READOUT): automation.validate_automation(
+                {
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                        Iec62056OWaitNextReadoutTrigger
+                    ),
+                }
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -99,3 +123,11 @@ async def to_code(config):
 
     if CONF_MODE_D in config:
         cg.add(var.set_mode_d(config[CONF_MODE_D]))
+
+    for conf in config.get(CONF_ON_TIMEOUT, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
+
+    for conf in config.get(CONF_ON_WAIT_NEXT_READOUT, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
