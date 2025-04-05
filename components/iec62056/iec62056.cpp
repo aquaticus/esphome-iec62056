@@ -585,8 +585,8 @@ bool IEC62056Component::validate_float_(const char *value) {
   const size_t max_len = 20;
   size_t count = 0;
   const char *p = value;
-  while (*p && *p != '*') {  // ignore unit at the end
-    if (!(isdigit(*p) || *p == '.' || *p == '-')) {
+  while (*p && *p != '*' && *p != '#') {  // ignore unit at the end
+    if (!(isdigit(*p) || *p == '.' || *p == '-' || *p == ',')) { // accept comma and dot as decimal separator
       return false;
     }
     p++;
@@ -637,6 +637,11 @@ bool IEC62056Component::set_sensor_value_(SENSOR_MAP::iterator &i, const char *v
     // convert to float
     if (validate_float_(value)) {
       IEC62056Sensor *sen = static_cast<IEC62056Sensor *>(sensor);
+      // convert comma (if any) to dot
+      char *p = strchr(value, ',');
+      if (p) {
+        *p = '.'; // strtof() expects dot as decimal separator
+      }
       float f = strtof(value, nullptr);
       sen->set_value(f);
       ESP_LOGD(TAG, "Set sensor '%s' for OBIS '%s'. Value: %f", sen->get_name().c_str(), sen->get_obis().c_str(), f);
