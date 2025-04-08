@@ -11,6 +11,7 @@ from esphome.const import (
 from esphome import automation
 
 CODEOWNERS = ["@aquaticus"]
+MULTI_CONF = True
 
 DEPENDENCIES = ["uart"]
 AUTO_LOAD = ["sensor", "text_sensor", "switch", "binary_sensor"]
