@@ -7,7 +7,7 @@ namespace iec62056 {
 
 class IEC62056 : public Component {
  public:
-  // Базовые сеттеры, которые уже использует Python-обёртка (__init__.py)
+  // Базовые сеттеры, которые использует Python-обёртка (__init__.py)
   void set_update_interval(uint32_t ms) { this->update_interval_ms_ = ms; }
   void set_baud_rate_max(uint32_t baud) { this->baud_rate_max_ = baud; }
   void set_receive_timeout(uint32_t ms) { this->receive_timeout_ms_ = ms; }
