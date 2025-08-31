@@ -1,4 +1,6 @@
 # components/iec62056/__init__.py
+import re
+
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart
@@ -12,23 +14,26 @@ IEC62056Component = iec62056_ns.class_(
     "IEC62056Component", cg.PollingComponent, uart.UARTDevice
 )
 
-# ---- Константы/ключи, которые используют sensor.py и text_sensor.py ----
+# ---- Ключи/константы, которые импортируют sensor.py и text_sensor.py ----
 CONF_IEC62056_ID = "iec62056_id"
 CONF_OBIS = "obis"
 
-# ---- Настройки компонента ----
+# ---- Опции компонента ----
 CONF_BAUD_RATE_MAX = "baud_rate_max"
-CONF_FORCE_BAUD_RATE = "force_baud_rate"              # НОВОЕ
-CONF_DECREASE_BAUD_ON_RETRY = "decrease_baud_on_retry" # НОВОЕ
+CONF_FORCE_BAUD_RATE = "force_baud_rate"               # фиксированная скорость
+CONF_DECREASE_BAUD_ON_RETRY = "decrease_baud_on_retry"  # запрет дауншифта
 CONF_BATTERY_METER = "battery_meter"
 CONF_CONNECTION_TIMEOUT = "connection_timeout"
 CONF_MAX_RETRIES = "max_retries"
 CONF_RETRY_DELAY = "retry_delay"
 CONF_MODE_D = "mode_d"
 
-# Простая проверка формата OBIS
+# Проверка формата OBIS (например: 1.8.0, 12.7.0, 0.9.1)
 def validate_obis(value):
-    return cv.matches_regex(r"^\d+(?:\.\d+){2,}$")(value)
+    s = cv.string(value)
+    if not re.match(r"^\d+(?:\.\d+){2,}$", s):
+        raise cv.Invalid("OBIS должен быть в формате 'X.Y.Z' (например, 1.8.0)")
+    return s
 
 CONFIG_SCHEMA = cv.Schema(
     {
