@@ -430,8 +430,31 @@ void IEC62056Component::loop() {
 
       // protocol B, C
       if (config_baud_rate_max_bps_ != 0 && config_baud_rate_max_bps_ != MAX_BAUDRATE) {
-        auto negotiated_bps = identification_to_baud_rate_(baud_rate_identification_);
-        if (negotiated_bps > config_baud_rate_max_bps_) {
+        
+auto negotiated_bps = identification_to_baud_rate_(baud_rate_identification_);
+        
+      if (this->force_baud_rate_ != 0) {
+
+        auto __forced = this->force_baud_rate_;
+
+        char __id = this->baud_rate_to_identification_(__forced);
+
+        if (__id != 0) {
+
+          ESP_LOGD(TAG, "Forcing baud rate to %u bps (\x27%c\x27).", __forced, __id);
+
+          negotiated_bps = __forced;
+
+          baud_rate_char = __id;
+
+        } else {
+
+          ESP_LOGW(TAG, "Requested force_baud_rate=%u is not supported; keeping negotiated %u.", __forced, negotiated_bps);
+
+        }
+
+      }
+if (negotiated_bps > config_baud_rate_max_bps_) {
           negotiated_bps = config_baud_rate_max_bps_;
 
           if (mode_ == PROTOCOL_MODE_B && negotiated_bps < PROTO_B_MIN_BAUDRATE) {
@@ -447,7 +470,7 @@ void IEC62056Component::loop() {
         baud_rate_char = baud_rate_identification_;
       }
 
-      if (retry_counter_ > 0) {  // decrease baud rate for retry
+      if (retry_counter_ > 0 && decrease_baud_on_retry_) {  // decrease baud rate for retry
         baud_rate_char -= retry_counter_;
         if (mode_ == PROTOCOL_MODE_B && baud_rate_char < PROTO_B_RANGE_BEGIN) {
           baud_rate_char = PROTO_B_RANGE_BEGIN;
