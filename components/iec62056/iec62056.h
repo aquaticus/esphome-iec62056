@@ -41,6 +41,8 @@ enum ProtocolMode { PROTOCOL_MODE_A = 'A', PROTOCOL_MODE_B = 'B', PROTOCOL_MODE_
 /// @brief Implements support for IEC 62056-21 meters.
 class IEC62056Component : public Component, public uart::UARTDevice {
  public:
+  void set_force_baud_rate(uint32_t baud) { this->force_baud_rate_ = baud; }
+  void set_decrease_baud_on_retry(bool v) { this->decrease_baud_on_retry_ = v; }
   IEC62056Component();
 
   void setup() override;

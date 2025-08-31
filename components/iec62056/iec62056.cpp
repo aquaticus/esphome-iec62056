@@ -433,7 +433,9 @@ void IEC62056Component::loop() {
         
 auto negotiated_bps = identification_to_baud_rate_(baud_rate_identification_);
         
-      if (this->force_baud_rate_ != 0) {
+      
+      if (this->force_baud_rate_ != 0) { negotiated_bps = this->force_baud_rate_; }
+if (this->force_baud_rate_ != 0) {
 
         auto __forced = this->force_baud_rate_;
 
