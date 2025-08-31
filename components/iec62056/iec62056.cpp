@@ -16,6 +16,7 @@ static const uint8_t ACK = 0x06;
 static const char *const TAG = "iec62056.component";
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
 const uint32_t BAUDRATES[] = {300, 600, 1200, 2400, 4800, 9600, 19200};
 #define MAX_BAUDRATE (BAUDRATES[sizeof(BAUDRATES) / sizeof(uint32_t) - 1])
 #define PROTO_B_MIN_BAUDRATE (BAUDRATES[1])
@@ -870,6 +871,7 @@ void IEC62056::apply_forced_or_negotiated_speed_(uint32_t &target_baud, char &co
       case 9600: code_char = '5'; break;
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
       case 4800: code_char = '4'; break;
       case 2400: code_char = '3'; break;
       case 1200: code_char = '2'; break;
@@ -888,6 +890,7 @@ void IEC62056::maybe_decrease_baud_on_retry_(uint8_t retry_index, uint32_t &targ
     ESP_LOGD(TAG, "Retry %u without decreasing baud (staying at current baud).", retry_index);
     return;
   }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
   { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
   if (retry_index == 1) { target_baud = 4800; code_char = '4'; }
