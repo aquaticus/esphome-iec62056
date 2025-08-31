@@ -14,6 +14,9 @@ static const uint8_t STX = 0x02;
 static const uint8_t ACK = 0x06;
 
 static const char *const TAG = "iec62056.component";
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
 const uint32_t BAUDRATES[] = {300, 600, 1200, 2400, 4800, 9600, 19200};
 #define MAX_BAUDRATE (BAUDRATES[sizeof(BAUDRATES) / sizeof(uint32_t) - 1])
 #define PROTO_B_MIN_BAUDRATE (BAUDRATES[1])
@@ -854,6 +857,46 @@ void IEC62056Component::update_connection_start_timestamp_() {
   } else {
     ESP_LOGV(TAG, "Begin retry");
   }
+}
+
+
+static const char *const TAG = "iec62056";
+
+void IEC62056::apply_forced_or_negotiated_speed_(uint32_t &target_baud, char &code_char) {
+  target_baud = this->negotiated_max_baud_;
+  code_char = this->negotiated_code_char_;
+  if (this->force_baud_rate_ > 0) {
+    target_baud = this->force_baud_rate_;
+    switch (this->force_baud_rate_) {
+      case 9600: code_char = '5'; break;
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+      case 4800: code_char = '4'; break;
+      case 2400: code_char = '3'; break;
+      case 1200: code_char = '2'; break;
+      case 600:  code_char = '1'; break;
+      case 300:  code_char = '0'; break;
+      default: break;
+    }
+    ESP_LOGD(TAG, "Forcing baud rate to %u (code '%c')", target_baud, code_char);
+  } else {
+    ESP_LOGD(TAG, "Using negotiated baud rate %u (code '%c')", target_baud, code_char);
+  }
+}
+
+void IEC62056::maybe_decrease_baud_on_retry_(uint8_t retry_index, uint32_t &target_baud, char &code_char) {
+  if (!this->decrease_baud_on_retry_) {
+    ESP_LOGD(TAG, "Retry %u without decreasing baud (staying at current baud).", retry_index);
+    return;
+  }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  { uint32_t target_baud; char speed_code; this->apply_forced_or_negotiated_speed_(target_baud, speed_code); }
+  if (retry_index == 1) { target_baud = 4800; code_char = '4'; }
+  else if (retry_index == 2) { target_baud = 2400; code_char = '3'; }
+  else if (retry_index == 3) { target_baud = 1200; code_char = '2'; }
+  ESP_LOGD(TAG, "Decreased baud rate for retry %u to: %u bps ('%c').", retry_index, target_baud, code_char);
 }
 
 }  // namespace iec62056
