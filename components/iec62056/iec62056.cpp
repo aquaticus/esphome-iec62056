@@ -51,7 +51,11 @@ void IEC62056Component::setup() {
 
 void IEC62056Component::dump_config() {
   ESP_LOGCONFIG(TAG, "IEC62056:");
-  LOG_UPDATE_INTERVAL(this);
+  if (is_periodic_readout_enabled_()) {
+    ESP_LOGCONFIG(TAG, "  Update interval: %.3fs", this->update_interval_ms_ / 1000.0f);
+  } else {
+    ESP_LOGCONFIG(TAG, "  Update interval: never");
+  }
   ESP_LOGCONFIG(TAG, "  Connection timeout: %.3fs", this->connection_timeout_ms_ / 1000.0f);
   if (!force_mode_d_) {
     // These settings are not used in Mode D
