@@ -27,11 +27,26 @@ namespace iec62056 {
 
 static const uint32_t TIMEOUT = 20;  // default value in uart implementation is 100ms
 
+template<typename Tag, typename Tag::type M>
+struct StowPrivate {
+  friend typename Tag::type get_member(Tag) {
+    return M;
+  }
+};
+
 #ifdef USE_ESP32_FRAMEWORK_ARDUINO
 
-class IEC62056UART final : public uart::ESP32ArduinoUARTComponent {
+struct ESP32ArduinoUARTComponent_hw_serial {
+  typedef HardwareSerial * uart::ESP32ArduinoUARTComponent::*type;
+  friend type get_member(ESP32ArduinoUARTComponent_hw_serial);
+};
+
+template struct StowPrivate<ESP32ArduinoUARTComponent_hw_serial, &uart::ESP32ArduinoUARTComponent::hw_serial_>;
+
+class IEC62056UART final {
  public:
-  IEC62056UART(uart::ESP32ArduinoUARTComponent const &uart) : uart_(uart), hw_(uart.*(&IEC62056UART::hw_serial_)) {}
+  IEC62056UART(uart::ESP32ArduinoUARTComponent const &uart)
+      : uart_(uart), hw_(uart.*get_member(ESP32ArduinoUARTComponent_hw_serial())) {}
 
   // Reconfigure baudrate
   void update_baudrate(uint32_t baudrate) { this->hw_->updateBaudRate(baudrate); }
@@ -83,10 +98,26 @@ class XSoftSerial : public uart::ESP8266SoftwareSerial {
   void set_bit_time(uint32_t bt) { bit_time_ = bt; }
 };
 
-class IEC62056UART final : public uart::ESP8266UartComponent {
+struct ESP8266UartComponent_hw_serial {
+  typedef HardwareSerial * uart::ESP8266UartComponent::*type;
+  friend type get_member(ESP8266UartComponent_hw_serial);
+};
+
+template struct StowPrivate<ESP8266UartComponent_hw_serial, &uart::ESP8266UartComponent::hw_serial_>;
+
+struct ESP8266UartComponent_sw_serial {
+  typedef uart::ESP8266SoftwareSerial * uart::ESP8266UartComponent::*type;
+  friend type get_member(ESP8266UartComponent_sw_serial);
+};
+
+template struct StowPrivate<ESP8266UartComponent_sw_serial, &uart::ESP8266UartComponent::sw_serial_>;
+
+class IEC62056UART final {
  public:
   IEC62056UART(uart::ESP8266UartComponent const &uart)
-      : uart_(uart), hw_(uart.*(&IEC62056UART::hw_serial_)), sw_(uart.*(&IEC62056UART::sw_serial_)) {}
+      : uart_(uart),
+        hw_(uart.*get_member(ESP8266UartComponent_hw_serial())),
+        sw_(uart.*get_member(ESP8266UartComponent_sw_serial())) {}
 
   void update_baudrate(uint32_t baudrate) {
     if (this->hw_ != nullptr) {
@@ -137,7 +168,7 @@ class IEC62056UART final : public uart::ESP8266UartComponent {
 #endif
 
 #ifdef USE_ESP_IDF
-class IEC62056UART final : public uart::IDFUARTComponent {
+class IEC62056UART final {
  public:
   IEC62056UART(uart::IDFUARTComponent &uart) : uart_(uart) {}
 
