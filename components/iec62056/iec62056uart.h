@@ -175,7 +175,7 @@ class IEC62056UART final {
   // Reconfigure baudrate
   void update_baudrate(uint32_t baudrate) {
     this->uart_.set_baud_rate(baudrate);
-    this->uart_.load_settings(false);
+    this->uart_.load_settings(true);
   }
 
   bool read_one_byte(uint8_t *data) {
