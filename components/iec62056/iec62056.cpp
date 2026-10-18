@@ -67,6 +67,7 @@ void IEC62056Component::dump_config() {
     }
     ESP_LOGCONFIG(TAG, "  Max retries: %u", this->max_retries_);
     ESP_LOGCONFIG(TAG, "  Retry delay: %.3fs", this->retry_delay_ / 1000.0f);
+    ESP_LOGCONFIG(TAG, "  BCC: %s", bcc_type2txt_(this->bcc_type_));
   }
   ESP_LOGCONFIG(TAG, "  Mode D: %s", YESNO(this->force_mode_d_));
 
@@ -515,12 +516,21 @@ void IEC62056Component::loop() {
           ESP_LOGD(TAG, "Total connection time: %u ms", millis() - retry_connection_start_timestamp_);
           // include ETX (but exclude STX)
           lrc_ ^= ETX;  // faster than update_lrc_(in_buf_,1);
+          bcc_sum_ += ETX;
           bool bcc_failed = false;
-          if (lrc_ == readout_lrc_) {
-            ESP_LOGD(TAG, "BCC verification is OK");
+          if (bcc_type_ == BCC_NONE) {
+            ESP_LOGD(TAG, "BCC verification disabled. Got 0x%02x (xor 0x%02x, sum 0x%02x)", readout_lrc_, lrc_,
+                     bcc_sum_);
           } else {
-            ESP_LOGE(TAG, "BCC verification failed. Expected 0x%02x, got 0x%02x", lrc_, readout_lrc_);
-            bcc_failed = true;
+            uint8_t expected = bcc_type_ == BCC_SUM ? bcc_sum_ : lrc_;
+            // With 7 data bits the meter can only transmit the low 7 bits of an arithmetic sum
+            if (((expected ^ readout_lrc_) & 0x7f) == 0) {
+              ESP_LOGD(TAG, "BCC verification is OK");
+            } else {
+              ESP_LOGE(TAG, "BCC verification failed (%s). Expected 0x%02x, got 0x%02x (xor 0x%02x, sum 0x%02x)",
+                       bcc_type2txt_(bcc_type_), expected, readout_lrc_, lrc_, bcc_sum_);
+              bcc_failed = true;
+            }
           }
 
           connection_status_(false);
@@ -570,6 +580,18 @@ void IEC62056Component::loop() {
 void IEC62056Component::update_lrc_(const uint8_t *data, size_t size) {
   for (size_t i = 0; i < size; i++) {
     lrc_ ^= data[i];
+    bcc_sum_ += data[i];
+  }
+}
+
+const char *IEC62056Component::bcc_type2txt_(BccType type) {
+  switch (type) {
+    case BCC_SUM:
+      return "sum";
+    case BCC_NONE:
+      return "none";
+    default:
+      return "xor";
   }
 }
 

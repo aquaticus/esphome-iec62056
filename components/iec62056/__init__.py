@@ -25,11 +25,19 @@ CONF_BAUD_RATE_MAX = "baud_rate_max"
 CONF_ON_TIMEOUT = "on_timeout"
 CONF_ON_WAIT_NEXT_READOUT = "on_wait_next_readout"
 CONF_UH50_WAKEUP = "uh50_wakeup"
+CONF_BCC = "bcc"
 
 iec62056_ns = cg.esphome_ns.namespace("iec62056")
 IEC62056Component = iec62056_ns.class_(
     "IEC62056Component", cg.Component, uart.UARTDevice
 )
+
+BccType = iec62056_ns.enum("BccType")
+BCC_TYPES = {
+    "xor": BccType.BCC_XOR,
+    "sum": BccType.BCC_SUM,
+    "none": BccType.BCC_NONE,
+}
 
 Iec62056OTimeoutTrigger = iec62056_ns.class_(
     "Iec62056OTimeoutTrigger", automation.Trigger
@@ -80,6 +88,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_MODE_D, default=False): cv.boolean,
             cv.Optional(CONF_UH50_WAKEUP, default=False): cv.boolean,
+            cv.Optional(CONF_BCC, default="xor"): cv.enum(BCC_TYPES, lower=True),
             cv.Optional(CONF_ON_TIMEOUT): automation.validate_automation(
                 {
                     cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
@@ -129,6 +138,9 @@ async def to_code(config):
 
     if CONF_UH50_WAKEUP in config:
         cg.add(var.set_uh50_wakeup(config[CONF_UH50_WAKEUP]))
+
+    if CONF_BCC in config:
+        cg.add(var.set_bcc_type(config[CONF_BCC]))
 
     for conf in config.get(CONF_ON_TIMEOUT, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)

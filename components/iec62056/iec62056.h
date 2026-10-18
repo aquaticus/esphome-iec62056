@@ -38,6 +38,13 @@ enum CommState {
 /// @brief Protocol types
 enum ProtocolMode { PROTOCOL_MODE_A = 'A', PROTOCOL_MODE_B = 'B', PROTOCOL_MODE_C = 'C', PROTOCOL_MODE_D = 'D' };
 
+/// @brief Block check character algorithm
+enum BccType {
+  BCC_XOR,   ///< IEC 62056-21 / ISO 1155: XOR of all bytes
+  BCC_SUM,   ///< Arithmetic sum modulo 256 (M-Bus style), used by some older IEC 61107 meters (e.g. Kamstrup)
+  BCC_NONE,  ///< Do not verify BCC
+};
+
 /// @brief Implements support for IEC 62056-21 meters.
 class IEC62056Component : public Component, public uart::UARTDevice {
  public:
@@ -63,6 +70,7 @@ class IEC62056Component : public Component, public uart::UARTDevice {
   /// @brief Called when switch state changed. Begins readout.
   void trigger_readout();
   void set_mode_d(bool flag) { force_mode_d_ = flag; }
+  void set_bcc_type(BccType type) { bcc_type_ = type; }
   void set_uh50_wakeup(bool flag) { uh50_wakeup_ = flag; }
 
   void add_on_timeout_callback(std::function<void()> callback) {
@@ -113,7 +121,12 @@ class IEC62056Component : public Component, public uart::UARTDevice {
   /// @brief Check if retry or wait for the next scheduled readout.
   void retry_or_sleep_();
   void update_lrc_(const uint8_t *data, size_t size);
-  void reset_lrc_() { lrc_ = 0; }
+  void reset_lrc_() {
+    lrc_ = 0;
+    bcc_sum_ = 0;
+  }
+  /// @brief Converts BCC type enum to string.
+  const char *bcc_type2txt_(BccType type);
   void wait_(uint32_t ms, CommState state);
   void clear_uart_input_buffer_();
   void send_battery_wakeup_sequence_();
@@ -193,6 +206,10 @@ class IEC62056Component : public Component, public uart::UARTDevice {
   size_t data_out_size_;
   /// @brief Computed LRC/BCC.
   uint8_t lrc_;
+  /// @brief Computed arithmetic BCC (sum modulo 256).
+  uint8_t bcc_sum_;
+  /// @brief Configured BCC algorithm.
+  BccType bcc_type_{BCC_XOR};
   /// @brief BCC received from the meter.
   uint8_t readout_lrc_;
   /// @brief When WAIT state began.
