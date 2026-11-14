@@ -269,7 +269,7 @@ void IEC62056Component::loop() {
   static uint32_t new_baudrate;
 
   const uint8_t id_request[5] = {'/', '?', '!', '\r', '\n'};
-  const uint8_t set_baud[6] = {ACK, 0x30, 0x30, 0x30, 0x0d, 0x0a};
+  const uint8_t set_baud[6] = {ACK, 0x30, 0x30, 0x37, 0x0d, 0x0a};
   const uint32_t now = millis();
 
   size_t frame_size;
